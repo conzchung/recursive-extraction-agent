@@ -1,0 +1,38 @@
+# Secrets
+.env
+*.env
+env.txt
+agent/.env
+agent/env.txt
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+
+# Version control
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker (prevent recursive copies)
+Dockerfile.fastapi
+Dockerfile.streamlit
+.dockerignore
+
+# Docs and config not needed in containers
+CLAUDE.md
+README.md
+*.log

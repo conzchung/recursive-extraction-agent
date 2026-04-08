@@ -1,0 +1,52 @@
+# Build Stage
+FROM python:3.12-slim AS builder
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libssl-dev \
+    zlib1g-dev \
+    libffi-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /code
+
+RUN pip install --upgrade pip setuptools wheel
+
+COPY requirements-fastapi.txt .
+# Remove any wrong 'fitz' package and force reinstall correct PyMuPDF
+RUN pip uninstall -y fitz || true \
+ && pip install --no-cache-dir -r requirements-fastapi.txt \
+ && pip install --no-cache-dir --force-reinstall PyMuPDF==1.26.4 \
+ && python -c "import fitz; print(f'PyMuPDF version: {fitz.__doc__.splitlines()[0]}')"
+
+# Runtime Stage
+FROM python:3.12-slim
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libgl1 \
+    libglib2.0-0 \
+    libxrender1 \
+    libsm6 \
+    libxext6 \
+    poppler-utils \
+    mupdf \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /code
+
+COPY --from=builder /usr/local /usr/local
+
+ENV GIT_PYTHON_REFRESH=quiet
+
+COPY main.py .
+COPY agent/ agent/
+
+EXPOSE 8000
+
+CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port 8000 --workers 2"]

@@ -1,0 +1,22 @@
+# Streamlit framework
+streamlit==1.52.1
+streamlit-cookies-controller==0.0.4
+
+# HTTP client (API calls to FastAPI backend)
+requests
+
+# Data handling
+pandas
+xlsxwriter
+
+# Azure Cosmos DB (sync client for account management)
+azure-cosmos==4.14.3
+
+# Auth
+bcrypt
+
+# Environment variables
+python-dotenv
+
+# Timezone
+pytz
