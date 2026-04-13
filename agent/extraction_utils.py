@@ -1339,7 +1339,8 @@ When processing tables from image-based documents (e.g., scanned bank statements
 ---
 
 **Expected Output Structure:**  
-- `extraction_progress` → A dictionary containing only the newly extracted data from this run. Keys = field names or table names, values = JSON-compatible types.  
+- `extraction_progress` must only contain fields that are newly extracted or updated in this run.
+    - Do not include fields/tables already marked as "completed" or "missing" in previous progress — omit their keys entirely from extraction_progress.
 - `note` → A dictionary with two keys:   
     - `remarks` → Detailed progress notes in free-text describing:
         * Which fields/tables are completed.
@@ -1661,7 +1662,8 @@ When extracting any field, treat BUSINESS_RULES as part of the field’s extract
 ---
 
 **Expected Output Structure:**  
-- `extraction_progress` → A dictionary containing only the newly extracted data from this run. Keys = field names or table names, values = JSON-compatible types.  
+- `extraction_progress` must only contain fields that are newly extracted or updated in this run.
+    - Do not include fields/tables already marked as "completed" or "missing" in previous progress — omit their keys entirely from extraction_progress.
 - `note` → A dictionary with two keys:
     - `remarks` → Detailed progress notes in free-text describing:
         * Which fields/tables are completed.
@@ -1803,30 +1805,25 @@ def merge_dicts(old_dict, new_dict):
     Merge rules per key:
     - Both values are lists: extend old list with new items.
     - Both values are dicts: merge recursively.
-    - Otherwise (type mismatch or scalar): overwrite with new value.
+    - Otherwise (type mismatch or scalar): overwrite only if new value is non-empty.
     - Key only in new_dict: add it to old_dict.
-
-    Args:
-        old_dict: The base dictionary to merge into (modified in place).
-        new_dict: The dictionary whose entries are merged into old_dict.
-
-    Returns:
-        The mutated old_dict with merged contents.
     """
     for key, new_value in new_dict.items():
         if key in old_dict:
             old_value = old_dict[key]
-            # If both values are lists, extend the old list with the new
+            # Both lists → extend
             if isinstance(old_value, list) and isinstance(new_value, list):
                 old_dict[key].extend(new_value)
-            # If both values are dictionaries, recursively merge them
+            # Both dicts → recurse
             elif isinstance(old_value, dict) and isinstance(new_value, dict):
                 merge_dicts(old_value, new_value)
-            # Otherwise, overwrite with new value
+            # Scalar → overwrite only if new value is non-empty
             else:
-                old_dict[key] = new_value
+                if new_value in (None, '', [], {}):
+                    pass  # preserve existing value
+                else:
+                    old_dict[key] = new_value
         else:
-            # If key doesn't exist in old_dict, add it
             old_dict[key] = new_value
     return old_dict
 
