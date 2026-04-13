@@ -227,7 +227,7 @@ def reflect_extraction_progress(state: ExtractionState):
     progress = note.get('progress', 'incomplete')
 
     if isinstance(progress, dict):
-        all_completed = all(v == 'completed' for v in progress.values())
+        all_completed = all(v != 'incomplete' for v in progress.values())
     elif isinstance(progress, str):
         all_completed = progress == 'completed'
     else:
